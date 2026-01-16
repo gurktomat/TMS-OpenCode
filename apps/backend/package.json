@@ -1,0 +1,11 @@
+{
+  "name": "@tms-platform/backend",
+  "version": "0.0.0",
+  "private": true,
+  "type": "commonjs",
+  "scripts": {
+    "dev": "node -e \"require('http').createServer((req,res)=>{res.statusCode=200;res.end('ok');}).listen(process.env.PORT||3000)\"",
+    "build": "node -e \"console.log('build not configured yet')\"",
+    "start": "node dist/main.js"
+  }
+}

@@ -1,0 +1,83 @@
+# TMS Platform - Docker Compose Configuration
+
+version: '3.8'
+
+services:
+  # Backend API Service
+  tms-backend:
+    build:
+      context: .
+      dockerfile: ./apps/backend/Dockerfile
+    restart: unless-stopped
+    ports:
+      - "3002:3000"
+    environment:
+      - NODE_ENV=development
+      - DB_HOST=tms-db
+      - DB_PORT=5432
+      - DB_NAME=tms_platform
+      - DB_USER=tms_user
+      - DB_PASSWORD=tms_secure_password
+      - JWT_SECRET=your-jwt-secret-here
+      - JWT_REFRESH_SECRET=your-refresh-secret-here
+    volumes:
+      - ./apps/backend/logs:/app/logs
+    networks:
+      - tms-network
+    depends_on:
+      - tms-db
+
+  # PostgreSQL Database
+  tms-db:
+    image: postgres:15-alpine
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=tms_user
+      - POSTGRES_PASSWORD=tms_secure_password
+      - POSTGRES_DB=tms_platform
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - tms-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tms_user -d tms_platform"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+
+  # Redis Cache
+  tms-redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+    networks:
+      - tms-network
+
+  # Frontend (Optional)
+  # tms-frontend:
+  #   build:
+  #     context: .
+  #     dockerfile: ./apps/frontend/Dockerfile
+  #   restart: unless-stopped
+  #   ports:
+  #     - "3001:3000"
+  #   environment:
+  #     - REACT_APP_URL=http://localhost:3000
+  #   volumes:
+  #     - ./apps/frontend/src:/app/src
+  #   networks:
+  #     - tms-network
+  #   depends_on:
+  #     - tms-backend
+
+volumes:
+  pgdata:
+  redisdata:
+
+networks:
+  tms-network:
+    driver: bridge
